@@ -50,6 +50,7 @@ def opt():
         {
             'short': "-t",
             'long': "--threads",
+            'action': None,
             'dest': "threads",
             'help': "Count of threads",
             'default': 4
