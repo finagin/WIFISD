@@ -19,18 +19,26 @@ from Helpers import *
 ################################################################################
 class Scanner:
     def __init__(self, station_ip=None, only=None):
-        self.station_ip = self_ip() if not station_ip else station_ip
+        self.static_station_ip = station_ip
+        self.station_ip = self.get_self_ip if not station_ip else self.get_station_ip
         self.only = only
         thread.start_new_thread(self.scanning, ())
 
     @staticmethod
     def socket():
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.settimeout(5)
+        sock.settimeout(10)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
 
         return sock
+
+    def get_station_ip(self):
+        return self.static_station_ip
+
+    @staticmethod
+    def get_self_ip():
+        return self_ip()
 
     def has_ip(self, sock):
         resp = sock.recv(400)
@@ -50,20 +58,22 @@ class Scanner:
             pass
 
     def scanning(self):
+        sleep_time = 5
         while True:
             s = self.socket()
             try:
-                s.bind((self.station_ip, 58255))
+                s.bind((self.station_ip(), 58255))
             except socket.error:
                 s.close()
-                time.sleep(1)
+                print('Silence...')
+                time.sleep(sleep_time)
                 continue
 
-            s.sendto('', ('<broadcast>', 55777))
-
             try:
+                s.sendto('', ('<broadcast>', 55777))
                 self.has_ip(s)
             except socket.timeout:
                 print('Silence..')
             finally:
-                time.sleep(2)
+                s.close()
+                time.sleep(sleep_time)

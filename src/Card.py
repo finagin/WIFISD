@@ -8,11 +8,14 @@
 from __future__ import print_function
 
 import thread
+import urllib
+import xml.etree.ElementTree as ET
 
 from Cards import Cards
 from File import File
 from Files import Files
 from Helpers import *
+from Storage import Storage
 
 
 ################################################################################
@@ -29,6 +32,7 @@ class Card:
     def start(self):
         self.ping()
         self.listener()
+        self.diff()
         print('Card ' + self.essid + ' (' + self.ip + ') - connect')
 
     def ping(self):
@@ -45,7 +49,7 @@ class Card:
                     self.disconnect()
             except socket.error:
                 self.disconnect()
-            time.sleep(5)
+            time.sleep(20)
 
     def listener(self):
         self.thread_listener = thread.start_new(self.listener_thread, ())
@@ -60,6 +64,20 @@ class Card:
             for x in new_files:
                 if x:
                     files.put(File(str(x[1:]), self))
+
+    def diff(self, path='/mnt/sd/DCIM'):
+        storage = Storage()
+        download_url = ('http://%s/cgi-bin/wifi_filelist?fn=' + path) % (self.ip,)
+        data = urllib.urlopen(download_url)
+        tree = ET.parse(data)
+        root = tree.getroot()
+        for child in root:
+            if child.attrib['type'] == '1':
+                self.diff(path + '/' + child.attrib['name'])
+            else:
+                file_instance = File(child.attrib['name'])
+                if file_instance not in storage:
+                    Files().put(File(path + '/' + child.attrib['name'], self))
 
     def disconnect(self):
         (Cards()).discard(self)

@@ -10,6 +10,7 @@ from __future__ import print_function
 from Downloader import Downloader
 from Helpers import *
 from Scanner import Scanner
+from Storage import Storage
 
 
 def opt():
@@ -28,7 +29,7 @@ def opt():
             'action': None,
             'dest': "ip",
             'help': "ip address of the computer (default %s)" % (self_ip()),
-            'default': self_ip()
+            'default': None
         },
         {
             'short': "-c",
@@ -44,6 +45,21 @@ def opt():
             'action': "store_true",
             'dest': "separate",
             'help': "Separate download folders",
+            'default': False
+        },
+        {
+            'short': "-t",
+            'long': "--threads",
+            'dest': "threads",
+            'help': "Count of threads",
+            'default': 4
+        },
+        {
+            'short': "-D",
+            'long': "--not-download-old",
+            'action': "store_true",
+            'dest': "not_download_old",
+            'help': "Not download old photos",
             'default': False
         },
     ]
@@ -66,7 +82,8 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     Scanner(station_ip=options.ip, only=options.card_ip)
-    Downloader(directory=options.dir, separate=options.separate)
+    Storage(directory=options.dir, not_download_old=options.not_download_old)
+    Downloader(separate=options.separate, thread_count=options.threads)
 
     while True:
-        time.sleep(5)
+        time.sleep(10)
