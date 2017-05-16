@@ -19,7 +19,7 @@ from Helpers import *
 @singleton
 class Files(Queue):
     def __repr__(self):
-        res = ""
+        res = os.linesep
 
         res += "#" * 10 + os.linesep
         for item in self.queue:
